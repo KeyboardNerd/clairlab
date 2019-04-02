@@ -1,6 +1,6 @@
 # Clair Onboarding
 
-For anyone who is interested in developing Clair, please read this to understand the motivations and designs.
+For anyone who is interested in developing Clair, please read this first to understand the motivations and designs.
 
 ## What is Clair
 Clair reports the vulnerabilities of container images to users and notifies changes in affected container images when a vulnerability changes. For a Clair instance, all images will only be posted once and scanned once.
@@ -25,6 +25,8 @@ Clair aggregates the vulnerabilities from different sources, including [OVAL](ht
 
 ### How does vulnerability sources report the vulnerabilities?
 Different sources have different styles of reports, our goal for Clair is to understand all of them internally.
+
+Typically, vulnerability sources for package manager report vulnerabilities on **source packages**, and some are on **binary packages**. ( TODO clarify source package and binary package )
 
 One example is Debian, you can view the source code [here](https://github.com/coreos/clair/blob/master/ext/vulnsrc/debian/debian.go). Debian tracker lists source package names, and their associated CVEs, including fixed versions for different Debian distros.
 
@@ -100,7 +102,6 @@ One block of the report looks like this:
 
 ## Vulnerability and Affected Feature
 ### How does Clair reads the vulnerability reports?
-
 It's easier to use an example, for the example above, Clair reads it as:
 
 - `CVE-2007-2383` does not affect `prototypejs` because it's not important.
@@ -112,6 +113,8 @@ For the second sentence:
 Clair saves this whole sentence as a **Vulnerability**.
 
 Clair saves the following sentence "source package `prototypejs` with any version less than `1.6.0.2-1` in Debian version `jessie`, `buster`, and `sid`. We recommend to upgrade to version `1.6.0.2-1` or later" as an **Affected Feature**.
+
+**Assumption!** Why is it "source package?" Clair assumes that the previous data source reports source package vulnerabilities.
 
 Clair then generalizes and stores all vulnerabilities in the following model:
 #### Vulnerability and Affected Feature Data Model
@@ -150,8 +153,7 @@ We generalize the 4 pieces of information as **Namespaced Feature**, in which th
 Once we know how vulnerability sources report their vulnerabilities, and the meaning of **Namespaced Feature**, **feature**, **namespace**, and how are they related vulnerabilities, we can start to see how are they extracted from a **container image**.
 
 ### What is a Container Image?
-A container image is a file system that's designed for usage with container.
-Most people use Docker Container Image using *union filesystem* by `AUFS` or `overlay` drivers.
+A container image is a file system that's designed for usage with container. It contains several layer blobs.
 
 ### How does it extract Namespaced Features from one-Layer container image?
 Let's start from a simple example, one layer, no *union filesystem*.
@@ -162,7 +164,9 @@ Clair reads files of interest from the layer blob to extract features and namesp
 
 #### alpine:latest Example
 
-The file `/etc/os-release` typically contains the operating system information. Here is one example from `alpine:latest`: 
+This image contains only one layer. 
+
+The file `/etc/os-release` typically contains the operating system information. Here is one example: 
 
 ```
 NAME="Alpine Linux"
@@ -182,9 +186,7 @@ name = Alpine Linux
 version = 3.9.2
 ```
 
-For the features, we know that typically package managers have specific location for their databases to understand what packages are installed in the operating system. 
-
-So, for example, `APK` package manager, Clair looks at the `lib/apk/db/installed` file.
+We know the typical location for package manager database, which tracks all installed packages for it. For example, Clair looks at the `lib/apk/db/installed` file, which is used by `APK`.
 
 Here is one block from the file representing one package:
 
@@ -214,7 +216,9 @@ F:usr
 F:usr/lib
 ```
 
-Clair understands the block and knows that it's a `MUSL` with version `1.1.20-r3`. Clair assumes `APK` installs compiled packages, and therefore it's of `Binary Package` type.
+Clair understands the block and knows that it's a `MUSL` with version `1.1.20-r3`. 
+
+**Assumption!** Clair assumes `APK` installs compiled packages, and therefore it's of `Binary Package` type.
 
 Thus, we get a feature: 
 
@@ -239,3 +243,13 @@ namespace:
 
 Thus, it can be related to a vulnerability as we shown in the `vulnerability` section.
 
+### How does it extract Namespaced Features from multi-Layer container image?
+One simple way is to just squash the multi-layer image into one, and we can find the namespace, and features easily. 
+
+To increase the efficiency, based on the fact that images can share layer blobs, we "compress" the layer blobs by first extracting the **features** and **namespaces** first, and store the "compressed" version of layer blobs into database. Then, Clair reads from the database, and compute **namespaced features** using its specific algorithm.
+
+# Appendix
+
+## Clair Data Models
+
+## Clair Assumptions
