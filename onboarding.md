@@ -243,13 +243,12 @@ namespace:
 
 Thus, it can be related to a vulnerability as we shown in the `vulnerability` section.
 
-### How does it extract Namespaced Features from multi-Layer container image?
-One simple way is to just squash the multi-layer image into one, and we can find the namespace, and features easily. 
+## Conclusion
+Now we have the basic building blocks of Clair. Vulnerability, Affected Feature, Namespaced Feature, Feature, Namespace.
 
-To increase the efficiency, based on the fact that images can share layer blobs, we "compress" the layer blobs by first extracting the **features** and **namespaces** first, and store the "compressed" version of layer blobs into database. Then, Clair reads from the database, and compute **namespaced features** using its specific algorithm.
+The next thing to understand is
 
-# Appendix
+1. How does Clair actually deal with multiple layer images 
+2. How does Clair know the relation between namespace and feature
+3. How does Clair keep performance good
 
-## Clair Data Models
-
-## Clair Assumptions
