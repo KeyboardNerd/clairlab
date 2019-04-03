@@ -12,8 +12,6 @@ Clair relates container images to vulnerabilities through â€œnamespaced featureâ
 1. Understand Vulnerabilities and Vulnerability Sources
 2. Understand Namespaced Feature, Namespace, Feature, and how they are related to vulnerabilities.
 3. Understand one-layer container image, and how to extract Namespaced Feature from it.
-4. Understand multiple-layer container image, how to extract Namespaced Feature from it, and explicit and implicit relation between namespace and feature.
-6. Understand how to compute the notification.
 
 ## Vulnerability Sources
 
@@ -243,12 +241,80 @@ namespace:
 
 Thus, it can be related to a vulnerability as we shown in the `vulnerability` section.
 
-## Conclusion
-Now we have the basic building blocks of Clair. Vulnerability, Affected Feature, Namespaced Feature, Feature, Namespace.
+## Summary
+To summarize the basic building blocks of Clair. Namespaced Feature acts like a bridge between Vulnerability and Container Image to satisfy the requirement: "no re-scanning when vulnerability changes".
 
-The next thing to understand is
+Let's see how does Clair represent the basic building blocks internally:
 
-1. How does Clair actually deal with multiple layer images 
-2. How does Clair know the relation between namespace and feature
-3. How does Clair keep performance good
+- Namespace
 
+```
+name TEXT
+version_format TEXT
+```
+
+- Feature
+
+```
+name TEXT
+version TEXT
+version_format TEXT
+feature_type -> FEATURE_TYPE table
+```
+
+- Feature Type
+used as ENUM
+
+```
+name TEXT
+```
+
+- Namespaced Feature
+
+```
+Feature -> FEATURE table
+Namespace -> Namespace Table
+```
+
+- Vulnerability
+
+```
+Name TEXT
+Namespace -> Namespace Table
+Description TEXT
+Link TEXT
+Severity -> Severity ENUM
+Metadata TEXT
+Created Timestamp
+Deleted Timestamp
+```
+
+- Severity
+
+```
+Unknown, Negligible, Low, Medium, High, Critical, Defcon1
+```
+
+- Vulnerability Affected Feature ( bad naming :( )
+
+```
+Vulnerability -> Vulnerability Table
+Feature Name TEXT
+Feature Type -> Feature Type Table
+Affected Version Range TEXT
+Fixed In Version TEXT
+```
+
+- Vulnerability Affected Namespaced Feature
+
+```
+Vulnerability -> Vulnerability Table
+Namespaced Feature -> Namespaced Feature Table
+Added By -> Vulnerability Affected Feature Table
+```
+
+## Next Step
+
+Once you understand the building blocks the next step is to understand how are Container Images **really** scanned in Clair. Images are called "Ancestry" in this context.
+
+https://github.com/KeyboardNerd/clairlab/blob/master/ancestry.md
