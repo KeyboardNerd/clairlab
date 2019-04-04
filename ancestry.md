@@ -24,7 +24,7 @@ RUN apk del go
 ENTRYPOINT ["sh"]
 ```
 
-### What's inside a Layer Blob?
+### Layer Blob
 
 When all layers are combined into one image, it forms a mountable file system for container runtime.
 
@@ -46,8 +46,19 @@ Some examples are
 
 `blobs.sh quay.io keyboardnerd/onboard overlay2` built using `overlay2` driver
 
-### Extract information from one layer blob as a Clair layer
+### Clair Layer
 
+A Clair Layer is a "compressed" view of the whole layer blob that Clair uses to squash into an image.
+
+For example, for this image:
+```
+FROM alpine:latest
+RUN apk add go
+RUN apk del go
+ENTRYPOINT ["sh"]
+```
+
+`alpine:latest` uses `apk` to install packages. Clair uses the `/var/lib/
 
 #### Find Feature's Namespace correctly
 
