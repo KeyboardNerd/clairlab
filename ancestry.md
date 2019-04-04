@@ -24,15 +24,30 @@ RUN apk del go
 ENTRYPOINT ["sh"]
 ```
 
-### What's inside a Layer?
+### What's inside a Layer Blob?
 
-### What's the connection between Layers
+When all layers are combined into one image, it forms a mountable file system for container runtime.
 
-### How does Docker squash the layers
+A layer typically contains:
+
+1. any file that is added or changed in its full form.
+2. any file that is removed only as a tar ball file path name with `.wh` as prefix.
+
+There are different graph drivers for combining the layers, e.g. `overlay2`, `aufs`, `vfs`. 
+However, as I tested, it seems that any graph driver results in very small difference in the published container image. We should deep dive into this later.
+
+https://github.com/moby/moby/blob/master/daemon/graphdriver/driver.go#L95
+
+You can checkout [graph driver](https://github.com/KeyboardNerd/clairlab/tree/master/graph%20driver) folder to retrieve image layers from some public repo, and take a look inside the decompressed layers to see what's inside. 
+
+Some examples are 
+
+`blobs.sh quay.io keyboardnerd/onboard latest-vfs` built using `vfs` driver
+
+`blobs.sh quay.io keyboardnerd/onboard overlay2` built using `overlay2` driver
 
 ### Extract information from one layer blob as a Clair layer
 
-### How does Clair squash the Layer (Ancestry Model)
 
 #### Find Feature's Namespace correctly
 
