@@ -38,17 +38,18 @@ However, as I tested, it seems that any graph driver results in very small diffe
 
 https://github.com/moby/moby/blob/master/daemon/graphdriver/driver.go#L95
 
-You can checkout [graph driver](https://github.com/KeyboardNerd/clairlab/tree/master/graph%20driver) folder to retrieve image layers from some public repo, and take a look inside the decompressed layers to see what's inside. 
+You can checkout [graph driver](https://github.com/KeyboardNerd/clairlab/tree/master/graph%20driver) folder to retrieve image layers from some public repo, and take a look inside the decompressed layers to see what's inside.
 
-Some examples are 
+Some examples are:
 
-`blobs.sh quay.io keyboardnerd/onboard latest-vfs` built using `vfs` driver
+`blobs.sh quay.io keyboardnerd/onboard latest-vfs` built using `vfs` driver.
 
-`blobs.sh quay.io keyboardnerd/onboard overlay2` built using `overlay2` driver
+`blobs.sh quay.io keyboardnerd/onboard overlay2` built using `overlay2` driver.
 
 ### Clair Layer
 
 A Clair Layer is a "compressed" view of the whole layer blob that Clair uses to squash into an image.
+Clair only looks at "interesting" files in the layer blob. Typically, the "interesting" files are those includes package installation information, os information, and python version information, etc.
 
 For example, for this image:
 ```
@@ -58,7 +59,6 @@ RUN apk del go
 ENTRYPOINT ["sh"]
 ```
 
-`alpine:latest` uses `apk` to install packages. Clair uses the `/var/lib/
 
 #### Find Feature's Namespace correctly
 
